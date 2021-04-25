@@ -1,4 +1,3 @@
-import numpy
 
 
 def global_align(x, y, s_match=1, s_mismatch=-1, s_gap=-2):
@@ -53,7 +52,21 @@ def main():
     for i in range(n):
         sequences.append(input().upper())  # getting sequences that we are going to align
 
-    print(global_align(sequences[0], sequences[1]))
+    distance_matrix = []
+    global_alignment_matrix = []
+
+    for i in range(n):
+        column_distance = []
+        column_alignment = []
+        for j in range(n):
+            align_x, align_y, distance = global_align(sequences[i], sequences[j])
+            column_distance.append(distance)
+            column_alignment.append([align_x, align_y])
+        distance_matrix.append(column_distance)
+        global_alignment_matrix.append(column_alignment)
+
+    print(distance_matrix)
+    print(global_alignment_matrix)
 
 
 if __name__ == '__main__':
