@@ -1,3 +1,9 @@
+class Node:
+    def __init__(self, node_id, sequence_number, child_1=None, child_2=None):
+        self.id = node_id
+        self.sequence_number = sequence_number
+        self.child_1 = child_1
+        self.child_2 = child_2
 
 
 def global_align(x, y, s_match=1, s_mismatch=-1, s_gap=-2):
@@ -47,10 +53,13 @@ def global_align(x, y, s_match=1, s_mismatch=-1, s_gap=-2):
 
 
 def main():
+    global tree
     n = int(input())  # getting counts of sequences
     sequences = []
     for i in range(n):
-        sequences.append(input().upper())  # getting sequences that we are going to align
+        new_sequence = input().upper()  # getting sequences that we are going to align
+        sequences.append(new_sequence)
+        tree.append(Node(len(tree), i))
 
     distance_matrix = []
     global_alignment_matrix = []
@@ -65,9 +74,10 @@ def main():
         distance_matrix.append(column_distance)
         global_alignment_matrix.append(column_alignment)
 
-    print(distance_matrix)
-    print(global_alignment_matrix)
+    for i in range(n - 1):
+        pass
 
 
+tree = []
 if __name__ == '__main__':
     main()
