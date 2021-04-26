@@ -27,6 +27,35 @@ def delete_children(parent_id):
         delete_children(tree.get(parent_id).child_2)
 
 
+def find_multiple_sequence_alignment(parent_node):
+    parent_node: GuideTreeNode
+    if parent_node.child_1 is None:
+        return [parent_node.sequence_number]
+    else:
+        left_sequences = find_multiple_sequence_alignment(tree.get(parent_node.child_1))
+        right_sequences = find_multiple_sequence_alignment(tree.get(parent_node.child_2))
+
+        left_consensus_sequence = find_consensus_sequence(left_sequences)
+        right_consensus_sequence = find_consensus_sequence(right_sequences)
+
+        align_left, align_right, distance = global_align(left_consensus_sequence, right_consensus_sequence)
+
+        align_based_on_consensus_alignment(left_sequences, left_consensus_sequence, align_left)
+        align_based_on_consensus_alignment(right_sequences, right_consensus_sequence, align_right)
+
+        left_sequences.extend(right_sequences)
+        return left_sequences
+
+
+def find_consensus_sequence(sequences):
+    sequences: []
+    return ""
+
+
+def align_based_on_consensus_alignment(sequences, consensus_sequence, aligned_consensus):
+    pass
+
+
 def global_align(x, y, s_match=1, s_mismatch=-1, s_gap=-2):
     A = []
     for i in range(len(y) + 1):
@@ -162,6 +191,8 @@ def main():
 
     root = GuideTreeNode(len(tree), None, rootChild1ID, rootChild2ID)
     tree[root.id] = root
+
+    find_multiple_sequence_alignment(root)
     print_tree(tree)
 
 
