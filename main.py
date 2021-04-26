@@ -1,7 +1,7 @@
 import math
 
 
-class Node:
+class GuideTreeNode:
     def __init__(self, node_id, sequence_number, child_1=None, child_2=None, child_1_distance=None,
                  child_2_distance=None):
         self.id = node_id
@@ -10,6 +10,11 @@ class Node:
         self.child_2 = child_2
         self.child_1_distance = child_1_distance
         self.child_2_distance = child_2_distance
+
+
+def print_tree(input_tree):
+    for key in input_tree.keys():
+        print(vars(input_tree.get(key)))
 
 
 def global_align(x, y, s_match=1, s_mismatch=-1, s_gap=-2):
@@ -65,22 +70,21 @@ def main():
     for i in range(n):
         new_sequence = input().upper()  # getting sequences that we are going to align
         sequences.append(new_sequence)
-        tree[i] = Node(len(tree), i)
+        tree[i] = GuideTreeNode(len(tree), i)
 
     distance_matrix = {}
     alignment_matrix = {}
 
-    for seq1 in tree:
+    for seq1_id in tree.keys():
         distance_column = {}
         align_column = {}
-        for seq2 in tree:
-            if seq1.id != seq2.id:
-                align_x, align_y, distance = global_align(sequences[seq1.sequence_number], sequences[seq2.
-                                                          sequence_number])
-                distance_column[seq2.id] = distance
-                align_column[seq2.id] = [align_x, align_y]
-        distance_matrix[seq1.id] = distance_column
-        alignment_matrix[seq1.id] = align_column
+        for seq2_id in tree.keys():
+            if seq1_id != seq2_id:
+                align_x, align_y, distance = global_align(sequences[tree.get(seq1_id).sequence_number], sequences[tree.get(seq2_id).sequence_number])
+                distance_column[seq2_id] = distance
+                align_column[seq2_id] = [align_x, align_y]
+        distance_matrix[seq1_id] = distance_column
+        alignment_matrix[seq1_id] = align_column
 
     # creating guide tree
     N = n
@@ -99,7 +103,7 @@ def main():
             distance_column = {}
             for seq2_id in distance_matrix.get(seq1_id).keys():
                 distance_column[seq2_id] = distance_matrix[seq1_id][seq2_id] - (
-                            net_divergence_r.get(seq1_id) + net_divergence_r.get(seq2_id)) / (N - 2)
+                        net_divergence_r.get(seq1_id) + net_divergence_r.get(seq2_id)) / (N - 2)
             distance_prime_matrix[seq1_id] = distance_column
 
         # find minimum distance index
@@ -114,27 +118,34 @@ def main():
 
         # create parent node of 2 minimum distanced nodes
         child_1_distance = distance_matrix[minimum_distance_index1][minimum_distance_index2] / 2 + (
-                    net_divergence_r[minimum_distance_index1] - net_divergence_r[minimum_distance_index2]) / (
-                                       2 * (N - 2))
+                net_divergence_r[minimum_distance_index1] - net_divergence_r[minimum_distance_index2]) / (
+                                   2 * (N - 2))
         child_2_distance = distance_matrix[minimum_distance_index1][minimum_distance_index2] - child_1_distance
-        new_node = Node(len(tree), None, minimum_distance_index1, minimum_distance_index2, child_1_distance,
-                        child_2_distance)
+        new_node = GuideTreeNode(len(tree), None, minimum_distance_index1, minimum_distance_index2, child_1_distance,
+                                 child_2_distance)
         tree[new_node.id] = new_node
 
         # create new distance matrix
         new_distance_matrix = {}
+        new_node_column = {}
         for seq1_id in distance_matrix.keys():
             distance_column = {}
             if seq1_id not in [minimum_distance_index1, minimum_distance_index2]:
                 for seq2_id in distance_matrix[seq1_id].keys():
                     if seq2_id not in [minimum_distance_index1, minimum_distance_index2]:
                         distance_column[seq2_id] = distance_matrix[seq1_id][seq2_id]
-                new_node_distance = (distance_matrix[minimum_distance_index1][seq1_id] + distance_matrix[minimum_distance_index2][seq1_id] - distance_matrix[minimum_distance_index1][minimum_distance_index2]) / 2
+                new_node_distance = (distance_matrix[minimum_distance_index1][seq1_id] +
+                                     distance_matrix[minimum_distance_index2][seq1_id] -
+                                     distance_matrix[minimum_distance_index1][minimum_distance_index2]) / 2
                 distance_column[new_node.id] = new_node_distance
+                new_node_column[seq1_id] = new_node_distance
                 new_distance_matrix[seq1_id] = distance_column
-
+        new_distance_matrix[new_node.id] = new_node_column
         distance_matrix = new_distance_matrix
+
         N -= 1
+
+    print_tree(tree)
 
 
 tree = {}
