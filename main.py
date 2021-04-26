@@ -17,6 +17,16 @@ def print_tree(input_tree):
         print(vars(input_tree.get(key)))
 
 
+def delete_children(parent_id):
+    global node_list
+    if parent_id is None:
+        return
+    else:
+        node_list.remove(parent_id)
+        delete_children(tree.get(parent_id).child_1)
+        delete_children(tree.get(parent_id).child_2)
+
+
 def global_align(x, y, s_match=1, s_mismatch=-1, s_gap=-2):
     A = []
     for i in range(len(y) + 1):
@@ -64,7 +74,7 @@ def global_align(x, y, s_match=1, s_mismatch=-1, s_gap=-2):
 
 
 def main():
-    global tree
+    global tree, node_list
     n = int(input())  # getting counts of sequences
     sequences = []
     for i in range(n):
@@ -80,7 +90,8 @@ def main():
         align_column = {}
         for seq2_id in tree.keys():
             if seq1_id != seq2_id:
-                align_x, align_y, distance = global_align(sequences[tree.get(seq1_id).sequence_number], sequences[tree.get(seq2_id).sequence_number])
+                align_x, align_y, distance = global_align(sequences[tree.get(seq1_id).sequence_number],
+                                                          sequences[tree.get(seq2_id).sequence_number])
                 distance_column[seq2_id] = distance
                 align_column[seq2_id] = [align_x, align_y]
         distance_matrix[seq1_id] = distance_column
@@ -144,11 +155,18 @@ def main():
         distance_matrix = new_distance_matrix
 
         N -= 1
+    node_list = list(tree.keys())
+    rootChild1ID = tree.get(len(tree) - 1).id
+    delete_children(rootChild1ID)
+    rootChild2ID = tree.get(len(tree) - 2).id
 
+    root = GuideTreeNode(len(tree), None, rootChild1ID, rootChild2ID)
+    tree[root.id] = root
     print_tree(tree)
 
 
 tree = {}
+node_list = []
 
 if __name__ == '__main__':
     main()
