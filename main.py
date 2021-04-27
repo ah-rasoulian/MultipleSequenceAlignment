@@ -48,19 +48,30 @@ def find_multiple_sequence_alignment(parent_node):
         return left_sequences
 
 
-def find_consensus_sequence(sequences):
-    sequences: []
+def find_consensus_sequence(sequences_index):
+    sequences_index: []
     consensus_sequence = ""
-    for i in range(len(sequences[0])):
+    for i in range(len(sequences[sequences_index[0]])):
         ith_chars = []
-        for seq in sequences:
-            ith_chars.append(seq[i])
+        for seq_id in sequences_index:
+            ith_chars.append(sequences[seq_id][i])
         consensus_sequence += Counter(ith_chars).most_common(1)[0][0]
     return consensus_sequence
 
 
-def align_based_on_consensus_alignment(sequences, consensus_sequence, aligned_consensus):
-    pass
+def align_based_on_consensus_alignment(sequences_index, consensus_sequence, aligned_consensus):
+    global sequences
+    for i in range(len(aligned_consensus)):
+        if aligned_consensus[i] == '-':
+            if len(consensus_sequence) < i + 1:
+                consensus_sequence += '-'
+                for seq_id in sequences_index:
+                    sequences[seq_id] += '-'
+            elif consensus_sequence[i] != '-':
+                consensus_sequence = consensus_sequence[0:i] + '-' + consensus_sequence[i:len(consensus_sequence)]
+                for seq_id in sequences_index:
+                    sequences[seq_id] = sequences[seq_id][0:i] + '-' + sequences[seq_id][i:len(sequences[seq_id])]
+    return sequences_index
 
 
 def global_align(x, y, s_match=1, s_mismatch=-1, s_gap=-2):
@@ -110,9 +121,8 @@ def global_align(x, y, s_match=1, s_mismatch=-1, s_gap=-2):
 
 
 def main():
-    global tree, node_list
+    global tree, node_list, sequences
     n = int(input())  # getting counts of sequences
-    sequences = []
     for i in range(n):
         new_sequence = input().upper()  # getting sequences that we are going to align
         sequences.append(new_sequence)
@@ -200,11 +210,15 @@ def main():
     tree[root.id] = root
 
     find_multiple_sequence_alignment(root)
-    print_tree(tree)
+
+    print()
+    for sequence in sequences:
+        print(sequence)
 
 
 tree = {}
 node_list = []
+sequences = []
 
 if __name__ == '__main__':
     main()
