@@ -74,6 +74,29 @@ def align_based_on_consensus_alignment(sequences_index, consensus_sequence, alig
     return sequences_index
 
 
+def calculate_score(final_sequences):
+    double_gap_score = -2
+    gap_score = -2
+    match_score = 1
+    mismatch_score = -1
+    score = 0
+    for i in range(len(final_sequences[0])):
+        ith_chars = []
+        for seq in final_sequences:
+            ith_chars.append(seq[i])
+        for first in range(len(ith_chars)):
+            for second in range(first + 1, len(ith_chars)):
+                if ith_chars[first] == '-' and ith_chars[second] == '-':
+                    score += double_gap_score
+                elif ith_chars[first] == '-' or ith_chars[second] == '-':
+                    score += gap_score
+                elif ith_chars[first] == ith_chars[second]:
+                    score += match_score
+                else:
+                    score += mismatch_score
+    return score
+
+
 def global_align(x, y, s_match=1, s_mismatch=-1, s_gap=-2):
     A = []
     for i in range(len(y) + 1):
@@ -211,9 +234,11 @@ def main():
 
     find_multiple_sequence_alignment(root)
 
-    print()
+    # printing MSA
     for sequence in sequences:
         print(sequence)
+    # printing MSA score
+    print(calculate_score(sequences))
 
 
 tree = {}
