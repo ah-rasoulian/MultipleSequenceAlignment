@@ -1,4 +1,5 @@
 import math
+from collections import Counter
 
 
 class GuideTreeNode:
@@ -49,7 +50,13 @@ def find_multiple_sequence_alignment(parent_node):
 
 def find_consensus_sequence(sequences):
     sequences: []
-    return ""
+    consensus_sequence = ""
+    for i in range(len(sequences[0])):
+        ith_chars = []
+        for seq in sequences:
+            ith_chars.append(seq[i])
+        consensus_sequence += Counter(ith_chars).most_common(1)[0][0]
+    return consensus_sequence
 
 
 def align_based_on_consensus_alignment(sequences, consensus_sequence, aligned_consensus):
