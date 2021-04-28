@@ -3,10 +3,11 @@ from collections import Counter
 
 
 class GuideTreeNode:
-    def __init__(self, node_id, sequence_number, child_1=None, child_2=None, child_1_distance=None,
+    def __init__(self, node_id, sequence_number, priority, child_1=None, child_2=None, child_1_distance=None,
                  child_2_distance=None):
         self.id = node_id
         self.sequence_number = sequence_number
+        self.priority = priority
         self.child_1 = child_1
         self.child_2 = child_2
         self.child_1_distance = child_1_distance
@@ -143,31 +144,8 @@ def global_align(x, y, s_match=1, s_mismatch=-1, s_gap=-2):
     return align_X, align_Y, A[len(y)][len(x)]
 
 
-def main():
-    global tree, node_list, sequences
-    n = int(input())  # getting counts of sequences
-    for i in range(n):
-        new_sequence = input().upper()  # getting sequences that we are going to align
-        sequences.append(new_sequence)
-        tree[i] = GuideTreeNode(len(tree), i)
-
-    distance_matrix = {}
-    alignment_matrix = {}
-
-    for seq1_id in tree.keys():
-        distance_column = {}
-        align_column = {}
-        for seq2_id in tree.keys():
-            if seq1_id != seq2_id:
-                align_x, align_y, distance = global_align(sequences[tree.get(seq1_id).sequence_number],
-                                                          sequences[tree.get(seq2_id).sequence_number])
-                distance_column[seq2_id] = distance
-                align_column[seq2_id] = [align_x, align_y]
-        distance_matrix[seq1_id] = distance_column
-        alignment_matrix[seq1_id] = align_column
-
-    # creating guide tree
-    N = n
+def create_guide_tree(distance_matrix, N):
+    global tree
     while N > 2:
         net_divergence_r = {}
         # calculating r values
@@ -187,12 +165,12 @@ def main():
             distance_prime_matrix[seq1_id] = distance_column
 
         # find minimum distance index
-        minimum_distance_index1 = -1
-        minimum_distance_index2 = -1
+        minimum_distance_index1 = 0
+        minimum_distance_index2 = 0
         minimum_distance_value = math.inf
         for seq1_id in distance_prime_matrix.keys():
             for seq2_id in distance_prime_matrix.get(seq1_id).keys():
-                if distance_prime_matrix[seq1_id][seq2_id] < minimum_distance_value:
+                if distance_prime_matrix[seq1_id][seq2_id] < minimum_distance_value or (distance_prime_matrix[seq1_id][seq2_id] == minimum_distance_value and (min(tree.get(seq1_id).priority, tree.get(seq2_id).priority) < min(tree.get(minimum_distance_index1).priority, tree.get(minimum_distance_index2).priority))):
                     minimum_distance_index1, minimum_distance_index2 = seq1_id, seq2_id
                     minimum_distance_value = distance_prime_matrix[seq1_id][seq2_id]
 
@@ -201,7 +179,10 @@ def main():
                 net_divergence_r[minimum_distance_index1] - net_divergence_r[minimum_distance_index2]) / (
                                    2 * (N - 2))
         child_2_distance = distance_matrix[minimum_distance_index1][minimum_distance_index2] - child_1_distance
-        new_node = GuideTreeNode(len(tree), None, minimum_distance_index1, minimum_distance_index2, child_1_distance,
+
+        new_node = GuideTreeNode(len(tree), None, min(tree.get(minimum_distance_index1).priority,
+                                                      tree.get(minimum_distance_index2).priority),
+                                 minimum_distance_index1, minimum_distance_index2, child_1_distance,
                                  child_2_distance)
         tree[new_node.id] = new_node
 
@@ -224,12 +205,40 @@ def main():
         distance_matrix = new_distance_matrix
 
         N -= 1
+
+
+def main():
+    global tree, node_list, sequences
+    n = int(input())  # getting counts of sequences
+    for i in range(n):
+        new_sequence = input().upper()  # getting sequences that we are going to align
+        sequences.append(new_sequence)
+        tree[i] = GuideTreeNode(len(tree), i, i)
+
+    distance_matrix = {}
+
+    for seq1_id in tree.keys():
+        distance_column = {}
+        for seq2_id in tree.keys():
+            if seq1_id != seq2_id:
+                align_x, align_y, distance = global_align(sequences[tree.get(seq1_id).sequence_number],
+                                                          sequences[tree.get(seq2_id).sequence_number])
+                distance_column[seq2_id] = distance
+        distance_matrix[seq1_id] = distance_column
+
+    # creating guide tree
+    create_guide_tree(distance_matrix, n)
+
+    # delete first child of root and all its descendants to find second child
     node_list = list(tree.keys())
     rootChild1ID = tree.get(len(tree) - 1).id
     delete_children(rootChild1ID)
-    rootChild2ID = tree.get(len(tree) - 2).id
+    # getting second child of root node
+    rootChild2ID = node_list[len(node_list) - 1]
 
-    root = GuideTreeNode(len(tree), None, rootChild1ID, rootChild2ID)
+    # create root node and add it to the tree
+    root = GuideTreeNode(len(tree), None, min(tree.get(rootChild1ID).priority, tree.get(rootChild2ID).priority),
+                         rootChild1ID, rootChild2ID)
     tree[root.id] = root
 
     find_multiple_sequence_alignment(root)
